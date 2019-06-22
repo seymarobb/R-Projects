@@ -1,0 +1,97 @@
+'''This peace of code is a part of "identifying discrimination in mortgage cases" project.
+After this data cleaning and preparation part that was done in R, project completed in SPSS Modeler. '''
+
+#Reading the file
+cali10 = read.csv(file.choose(), header = TRUE)
+
+#We need to remove the cases that the application was not completed since they would not show any discrimination in the agent's part.
+cali10 =subset(cali10, action_taken_name!="Application withdrawn by applicant")
+cali10 =subset(cali10, action_taken_name!="File closed for incompleteness")
+attach(cali10)
+
+#Take a look at the variables
+levels(action_taken_name)
+
+cali10$target = ifelse(action_taken_name!="Application denied by financial institution" & action_taken_name!= "Preapproval request denied by financial institution", 1, 0)
+cali10$target
+levels(cali10$target)
+str(cali10$target)
+sum(cali$target)
+tail(cali10$target)
+cali10$target[15000:15319]
+sort(cali10$target)
+head(cali10)
+tail(cali10)
+
+#Turning categorical variables to binary
+levels(applicant_race_name_1)
+cali10$white = ifelse(applicant_race_name_1 == "White", 1, 0)
+head(cali10)
+names(cali10)
+cali10$asian = ifelse(applicant_race_name_1 == "Asian", 1, 0)
+cali10$native = ifelse(applicant_race_name_1 == "American Indian or Alaska Native", 1, 0)
+cali10$afrikanamerikan = ifelse(applicant_race_name_1 == "Black or African American", 1, 0)
+colnames(cali10)[52] = c('african_american')
+cali10$hawaiian_islanders = ifelse(applicant_race_name_1 == "Native Hawaiian or Other Pacific Islander", 1, 0) 
+levels(owner_occupancy_name)
+cali10$owner_occupied = ifelse(owner_occupancy_name =="Owner-occupied as a principal dwelling", 1, 0)
+levels(applicant_sex_name)
+cali10$female = ifelse(applicant_sex_name == "Female", 1, 0)
+cali10$male = ifelse(applicant_sex_name == "Male", 1, 0)
+applicant_income_000s
+summary(applicant_income_000s)
+plot(applicant_income_000s)
+qqplot(applicant_income_000s, cali10$target)
+cali10$low_income = ifelse(applicant_income_000s <= 64, 1, 0)
+cali10$moderate_income = ifelse(applicant_income_000s <= 166 & applicant_income_000s > 64, 1, 0)
+cali10$high_income = ifelse(applicant_income_000s > 166, 1, 0)
+head(cali10)
+summary(hud_median_family_income)
+boxplot(hud_median_family_income)
+levels(cali10$action_taken_name)
+cali10$lowincome_household = ifelse(hud_median_family_income<63000,1,0)
+cali10$moderateincome_household = ifelse(hud_median_family_income<=87200 & hud_median_family_income>63000,1,0)
+cali10$highincome_household = ifelse(hud_median_family_income>87200,1,0)
+
+cali10$loan_amount_low = ifelse(loan_amount_000s<170.0,1,0)
+cali10$loan_amount_moderate = ifelse(loan_amount_000s<=417.0 & loan_amount_000s>170.0,1,0)
+cali10$loan_amount_high = ifelse(loan_amount_000s>417.0,1,0)
+summary(loan_amount_000s)
+cali10$co_white = ifelse(co_applicant_race_name_1 == "White", 1, 0)
+cali10$co_asian = ifelse(co_applicant_race_name_1 == "Asian", 1, 0)
+cali10$co_native = ifelse(co_applicant_race_name_1 == "American Indian or Alaska Native", 1, 0)
+cali10$co_african_american = ifelse(applicant_race_name_1 == "Black or African American", 1, 0)
+cali10$co_hawaiian_islanders = ifelse(applicant_race_name_1 == "Native Hawaiian or Other Pacific Islander", 1, 0)
+cali10$co_female = ifelse(co_applicant_sex_name == "Female", 1, 0)
+cali10$co_male = ifelse(co_applicant_sex_name == "Male", 1, 0)
+cali10$minority_percentage = with(cali10, minority_population/population*100)
+cali10$owner_occupied = ifelse(owner_occupancy_name=="Owner-occupied as a principal dwelling",1,0)
+cali10$not_owner_occupied = ifelse(owner_occupancy_name!="Owner-occupied as a principal dwelling",1,0)
+cali10$hispanic_latino = ifelse(applicant_ethnicity_name=='Hispanic or Latino',1,0)
+cali10$not_hispanic_latino = ifelse(applicant_ethnicity_name != 'Hispanic or Latino',1,0)
+cali10$co_hispanic_latino = ifelse(co_applicant_ethnicity_name=='Hispanic or Latino',1,0)
+cali10$co_not_hispanic_latino = ifelse(co_applicant_ethnicity_name!='Hispanic or Latino',1,0)
+cali10$debt_income = with(cali10, loan_amount_000s/applicant_income_000s*100)
+cali10$debt_house_income = with(cali10, loan_amount_000s/hud_median_family_income*100)
+colnames(cali10)[79] = c('loan_income')
+colnames(cali10)[80] = c('loan_household_income')
+summary(loan_income)
+summary(loan_household_income)
+boxplot(loan_household_income)
+minority_percentage
+
+#Preparation for modeling
+library(rpart)
+library(rpart.plot)
+library(ggplot2)
+summary(cali10)
+names(cali10)
+modeldata = cali10[, c(9,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,74,75,79)]
+library(caret)
+modeldata_train = floor(0.75 * nrow(modeldata))
+set.seed(100)
+train_sample = sample(seq_len(nrow(modeldata)), size = modeldata_train)                        
+train = modeldata[train_sample, ]
+test = modeldata[-train_sample, ]
+simplelm = lm(target~., data=train)
+summary(simplelm)
