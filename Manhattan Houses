@@ -1,0 +1,62 @@
+#Seyma Yurduseven
+#This is an EDA project on Manhattan houses dataset. 
+library(readxl)
+'''I have chosen the Manhattan dataset to analyze. First I have read the data using readxl() function. 
+Then I have checked the data using summary(), head(), str() functions. 
+I have realized that some column names were wrong, so I have changed them. 
+Then I have attached the dataset to my global environment.''' 
+#Read the data and check
+manh = read_excel("/Users/seyma/Downloads/rollingsales_manhattan.xls", skip = 4)
+head(manh)
+summary(manh)
+str(manh)
+
+#Since some column names are problematic, we need to change them
+colnames(manh)[7] = c("EASEMENT")
+colnames(manh)[10] = c("APARTMENT NUMBER")
+colnames(manh)[20] = c("SALE PRICE")
+summary(manh)
+attach(manh)
+
+#Explore that variables
+summary(`SALE PRICE`)
+`SALE PRICE`[10:20]
+plot(`SALE PRICE`, `LAND SQUARE FEET`)
+
+plot(`LAND SQUARE FEET`)
+EASEMENT[10:20]
+eas = EASEMENT[which(EASEMENT != NA)]
+eas[10:20]
+eas = na.exclude(EASEMENT)
+eas
+plot(eas)
+summary(NEIGHBORHOOD)
+NEIGHBORHOOD[10:30]
+is.na(NEIGHBORHOOD)
+names(manh)
+hist(`SALE PRICE`)
+plot(`SALE PRICE`)
+summary(`SALE PRICE`)
+qqline(`SALE PRICE`)
+qqplot(`SALE PRICE`, `SALE DATE`)
+`SALE PRICE`
+detach(manh)
+manh = manh[which(manh$`SALE PRICE`!=0), ]
+attach(manh)
+summary(`SALE PRICE`)
+dim(manh)
+`SALE PRICE`
+regress = lm(`SALE PRICE`~ `LAND SQUARE FEET`+ `GROSS SQUARE FEET`+ `YEAR BUILT`+`TAX CLASS AT TIME OF SALE`, data = manh)
+summary(regress)
+levels(BOROUGH)
+BOROUGH
+levels(`BUILDING CLASS AT PRESENT`)
+`BUILDING CLASS AT PRESENT`
+`TAX CLASS AT TIME OF SALE`
+NEIGHBORHOOD
+levels(NEIGHBORHOOD)
+str(NEIGHBORHOOD)
+na.omit(NEIGHBORHOOD)
+plot(manh[!is.na(manh$NEIGHBORHOOD)])
+plot(regress)
+
