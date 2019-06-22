@@ -1,0 +1,84 @@
+#Seyma Yurduseven
+#This is a data analytics project on Bank and Management dataset that can be found on:
+  https://archive.ics.uci.edu/ml/datasets/bank+marketing
+'''This dataset is related to the marketing campaigns of a bank. 
+We will try to predict if the phone calls made were successful and the clients accepted to make a term deposit. 
+This information is captured at the variable ‘y’. If it is a yes, it means that they were successful and vice versa.'''    
+
+#Bank dataset, used bank-full
+
+#Read the dataset
+bank = read.csv("/Users/seyma/Downloads/bank/bank-full.csv", sep = ';')
+head(bank)
+str(bank)
+names(bank)
+sum(is.na(bank))
+summary(bank)
+job = table(bank$job)
+barplot(job, las = 2, col = 'darkred')
+
+qplot(bank$age, data = bank, fill = bank$y , binwidth = 5) +
+  scale_x_continuous(breaks = seq(15,100,5), lim = c(15,100)) +
+  scale_y_sqrt() +xlab('Age')
+qplot(bank$duration, data = bank, fill = bank$y , binwidth = 5) +
+  scale_x_continuous(breaks = seq(0,3000,10), lim = c(0,3000)) +
+  scale_y_sqrt() +xlab('Duration')
+bank = bank[!(bank$duration > 3000),]
+target = table(bank$y)
+target
+barplot(target, col = 'lightgreen')
+attach(bank)
+set.seed(1234)
+sample <- sample.int(n = nrow(d2), size = floor(.8*nrow(bank)), replace = F)
+traindata <- data[sample, ]
+testdata  <- data[-sample, ]
+set.seed(1234)
+samp <- sample(nrow(bank), 0.8 * nrow(bank))
+train_bank <- bank[samp, ]
+test_bank <- bank[-samp, ]
+#Random forest
+library(randomForest)
+random <- randomForest(y ~ ., data = train_bank)
+random
+varImp(random)
+varImpPlot(random)
+pred <- predict(random, newdata = test_bank)
+table(pred, test_bank$y)
+Accuracy = (7699+535)/nrow(test_bank)
+Accuracy
+
+bank_knn <- train(y ~ ., data = train_bank, method = "knn", 
+                  maximize = TRUE,
+                  trControl = trainControl(method = "cv", number = 10),
+                  preProcess=c("center", "scale"))
+
+predicted_kNN <- predict(bank_knn , newdata = test_bank)
+confusionMatrix(predicted_kNN , test_bank$y)
+
+### Cross table validation for KNN
+CrossTable(testdata$y, predictedkNN,
+           prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
+           dnn = c('actual default', 'predicted default'))
+
+tree_bank = rpart(y~ ., data = train_bank)
+prp(tree_bank, type=2, extra=1)
+p <- predict(tree_bank, newdata=test_bank, type = "class")
+p
+table(p, test_bank$y)
+confusionMatrix(p, test_bank$y)
+
+bank$age <- as.numeric(bank$age)
+bank$duration <- as.numeric(bank$duration)
+bank$campaign <- as.numeric(bank$campaign)
+bank$pdays <- as.numeric(bank$pdays)
+bank$previous <- as.numeric(bank$previous)
+bank$y <- as.numeric(bank$y)
+head(y)
+detach(bank)
+attach(bank)
+reg_bank = lm(y~ age + duration+ campaign+ pdays+ previous+ balance)
+summary(reg_bank)
+predicted_y <- round(predict(reg_bank, newdata=test_bank))
+table(predicted_y, test_bank$y)
+accuracy_bank = (7902+120)/nrow(test_bank)
+accuracy_bank
