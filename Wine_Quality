@@ -1,0 +1,171 @@
+#Seyma Yurduseven
+#Datasets: White wine | Bank and Management
+#Datasets for this project can be reached at: 
+https://archive.ics.uci.edu/ml/datasets/Wine+Quality
+  
+
+#Read the first dataset, white wine
+#White wine dataset has “;” as separator instead of “,”. So while reading the file I needed to indicate that.
+wine = read.csv("/Users/seyma/Downloads/winequality-red.csv", sep = ";", header = TRUE)
+head(wine)
+attach(wine)
+summary(wine)
+str(wine)
+names(wine)
+
+# Varied visualizations to see the possible relations between variables. 
+boxplot(wine, las = 2,col = c('red', 'red', 'red', 'red', 'red', 'red', 'red'),  par(mar = c(12,5,4,2) + 0.1))
+boxplot(fixed.acidity, volatile.acidity, names = c('fixed,acidity', 'volatile.acidity'), )
+plot(total.sulfur.dioxide, quality)
+
+#Data Cleaning
+#We can see that total.sulfur.dioxide is the variable that has the most extreme outliers and it is the one that is more widely
+#distributed. We will need to remove those outliers. 
+wine = wine[!(total.sulfur.dioxide > 200),]
+detach(wine)
+
+
+boxplot(quality, col=c('lightblue') , names = c('quality'))
+barplot(quality)
+counts = table(quality)
+barplot(counts, col = (blues9), main = "Quality")
+wine$taste <- ifelse(quality < 6, 'nope', 'definitely')
+wine$taste[quality == 6] <- 'maybe'
+wine$taste <- as.factor(wine$taste)
+bars = table(taste)
+barplot(bars, col = (blues9), main = "Would I drink?")
+bars
+qplot(alcohol, data = wine, fill = taste , binwidth = 0.2) +
+  scale_x_continuous(breaks = seq(8,15,1), lim = c(8,15)) +
+  scale_y_sqrt() +xlab('Alcohol')
+summary(residual.sugar)
+qplot(residual.sugar, data = wine, fill = taste , binwidth = 0.2) +
+  scale_x_continuous(breaks = seq(0.5,15.5,1), lim = c(0.5,15.5)) +
+  scale_y_sqrt() +xlab('Sugar')
+summary(alcohol)
+
+#Models
+set.seed(1234)
+samp <- sample(nrow(wine), 0.6 * nrow(wine))
+train <- wine[samp, ]
+test <- wine[-samp, ]
+
+#Random forest
+library(randomForest)
+model <- randomForest(taste ~ . - quality, data = train)
+model
+varImp(model)
+varImpPlot(model)
+pred <- predict(model, newdata = test)
+table(pred, test$taste)
+Accuracy = (41+174+235)/nrow(test)
+Accuracy
+
+#Linear regression
+linear = lm(quality~ . -taste, data = train)
+linear
+summary(linear)
+linear_tweaked = lm(quality~. -taste - fixed.acidity - residual.sugar - free.sulfur.dioxide - total.sulfur.dioxide, data = train)
+summary(linear_tweaked)
+results <- round(predict(linear_tweaked, newdata=test))
+table(results, test$quality)
+
+Acc = (199+166+22)/nrow(test)
+Acc
+library(ggplot2)
+library(GGally)
+
+quality = as.factor(quality)
+library(rpart)
+library(rpart.plot)
+library(caret)
+tree = rpart(quality~ . -taste, data = train)
+prp(tree, type=2, extra=1)
+prediction <- predict(tree, newdata=test)
+table(prediction, test$quality, dnn = c('Prediction', 'Label'))
+confusionMatrix(round(prediction), test$quality)
+taste_tree = rpart(taste~ . - quality, data = train)
+prp(taste_tree, type = 2, extra = 1)
+pre <- predict(taste_tree, newdata=test)
+confusionMatrix(round(pre), test$taste)
+pre
+summary(pre)
+test$taste
+
+#Bank dataset, used bank-full
+
+#Read the dataset
+bank = read.csv("/Users/seyma/Downloads/bank/bank-full.csv", sep = ';')
+head(bank)
+str(bank)
+names(bank)
+sum(is.na(bank))
+summary(bank)
+job = table(bank$job)
+barplot(job, las = 2, col = 'darkred')
+
+qplot(bank$age, data = bank, fill = bank$y , binwidth = 5) +
+  scale_x_continuous(breaks = seq(15,100,5), lim = c(15,100)) +
+  scale_y_sqrt() +xlab('Age')
+qplot(bank$duration, data = bank, fill = bank$y , binwidth = 5) +
+  scale_x_continuous(breaks = seq(0,3000,10), lim = c(0,3000)) +
+  scale_y_sqrt() +xlab('Duration')
+bank = bank[!(bank$duration > 3000),]
+target = table(bank$y)
+target
+barplot(target, col = 'lightgreen')
+attach(bank)
+set.seed(1234)
+sample <- sample.int(n = nrow(d2), size = floor(.8*nrow(bank)), replace = F)
+traindata <- data[sample, ]
+testdata  <- data[-sample, ]
+set.seed(1234)
+samp <- sample(nrow(bank), 0.8 * nrow(bank))
+train_bank <- bank[samp, ]
+test_bank <- bank[-samp, ]
+#Random forest
+library(randomForest)
+random <- randomForest(y ~ ., data = train_bank)
+random
+varImp(random)
+varImpPlot(random)
+pred <- predict(random, newdata = test_bank)
+table(pred, test_bank$y)
+Accuracy = (7699+535)/nrow(test_bank)
+Accuracy
+
+bank_knn <- train(y ~ ., data = train_bank, method = "knn", 
+                  maximize = TRUE,
+                  trControl = trainControl(method = "cv", number = 10),
+                  preProcess=c("center", "scale"))
+
+predicted_kNN <- predict(bank_knn , newdata = test_bank)
+confusionMatrix(predicted_kNN , test_bank$y)
+
+### Cross table validation for KNN
+CrossTable(testdata$y, predictedkNN,
+           prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
+           dnn = c('actual default', 'predicted default'))
+
+tree_bank = rpart(y~ ., data = train_bank)
+prp(tree_bank, type=2, extra=1)
+p <- predict(tree_bank, newdata=test_bank, type = "class")
+p
+table(p, test_bank$y)
+confusionMatrix(p, test_bank$y)
+
+bank$age <- as.numeric(bank$age)
+bank$duration <- as.numeric(bank$duration)
+bank$campaign <- as.numeric(bank$campaign)
+bank$pdays <- as.numeric(bank$pdays)
+bank$previous <- as.numeric(bank$previous)
+bank$y <- as.numeric(bank$y)
+head(y)
+detach(bank)
+attach(bank)
+reg_bank = lm(y~ age + duration+ campaign+ pdays+ previous+ balance)
+summary(reg_bank)
+predicted_y <- round(predict(reg_bank, newdata=test_bank))
+table(predicted_y, test_bank$y)
+accuracy_bank = (7902+120)/nrow(test_bank)
+accuracy_bank
