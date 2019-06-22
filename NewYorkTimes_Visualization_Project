@@ -1,0 +1,70 @@
+'''This project is for EDA on New York Times reader datasets. After various visualizations, we move on to some statistics.''' 
+
+#Read the datasets
+nyt2 = read.csv(file.choose(), header = TRUE)
+head(nyt2)
+
+nyt3 = read.csv(file.choose(), header = TRUE)
+head(nyt3)
+nyt4 = read.csv(file.choose(), header = TRUE)
+head(nyt4)
+nyt5 = read.csv(file.choose(), header = TRUE)
+head(nyt5)
+nyt6 = read.csv(file.choose(), header = TRUE)
+head(nyt6)
+boxplot(nyt2$Age, nyt3$Age, nyt4$Age, nyt5$Age, nyt6$Age, col=(c("gold","darkgreen", "darkred", "black", "darkblue")), main = "Age Distribution", las = 2, names = c("NYT2", "NYT3", "NYT4", "NYT5", "NYT6"))
+nyt2 = nyt2[which(nyt2$Age != "0"), ]
+nyt3 = nyt3[which(nyt3$Age != "0"), ]
+nyt4 = nyt4[which(nyt4$Age != "0"), ]
+nyt5 = nyt5[which(nyt5$Age != "0"), ]
+nyt6 = nyt6[which(nyt6$Age != "0"), ]
+boxplot(nyt2$Age, nyt3$Age, nyt4$Age, nyt5$Age, nyt6$Age, col=(c("gold","darkgreen", "darkred", "black", "darkblue")), main = "Female Age Distribution", las = 2, names = c("NYT2", "NYT3", "NYT4", "NYT5", "NYT6"))
+
+boxplot(nyt2$Impressions, nyt3$Impressions, nyt4$Impressions, nyt5$Impressions, nyt6$Impressions, col=(c("gold","darkgreen", "darkred", "grey", "darkblue")), main = "Impressions Distribution", las = 2, names = c("NYT2", "NYT3", "NYT4", "NYT5", "NYT6"))
+ggplot(data=nyt2, aes(x=Age)) + geom_point() + geom_step(data=nyt3)+ geom_histogram(binwidth=5, col = "darkblue", fill = "blue") + ggtitle("NYT2 Age distribution") + xlab("Age") + ylab("Frequency")
+
+ggplot(data=nyt2, aes(x=nyt2$Age)) + geom_histogram(binwidth=5, col = "darkblue", fill = "blue") + ggtitle("NYT2 Age distribution") + xlab("Age") + ylab("Frequency")
+ggplot(data=nyt2, aes(x=nyt2$Impressions)) + geom_histogram(binwidth=1, col = "black", fill = "darkred") + ggtitle("NYT2 Women Impressions distribution") + xlab("Impressions") + ylab("Frequency")
+
+#Here we need to do some data cleaning since we have a lot of data that shows the age of the reader as zero.
+nyt3 = nyt3[which(nyt3$Age != "0"), ]
+ggplot(data=nyt3, aes(x=nyt3$Age)) + geom_histogram(binwidth=5, col = "darkblue", fill = "blue") + ggtitle("NYT3 Age distribution") + xlab("Age") + ylab("Frequency")
+ggplot(data=nyt4, aes(x=nyt4$Age)) + geom_histogram(binwidth=5, col = "darkblue", fill = "blue") + ggtitle("NYT4 Age distribution") + xlab("Age") + ylab("Frequency")
+ggplot(data=nyt5, aes(x=nyt5$Age)) + geom_histogram(binwidth=5, col = "darkblue", fill = "blue") + ggtitle("NYT5 Age distribution") + xlab("Age") + ylab("Frequency")
+ggplot(data=nyt6, aes(x=nyt6$Age)) + geom_histogram(binwidth=5, col = "darkblue", fill = "blue") + ggtitle("NYT6 Age distribution") + xlab("Age") + ylab("Frequency")
+
+ggplot(data=nyt3, aes(x=nyt3$Impressions)) + geom_histogram(binwidth=1, col = "black", fill = "darkred") + ggtitle("NYT3 Impressions distribution") + xlab("Impressions") + ylab("Frequency")
+ggplot(data=nyt4, aes(x=nyt4$Impressions)) + geom_histogram(binwidth=1, col = "black", fill = "darkred") + ggtitle("NYT4 Impressions distribution") + xlab("Impressions") + ylab("Frequency")
+ggplot(data=nyt5, aes(x=nyt5$Impressions)) + geom_histogram(binwidth=1, col = "black", fill = "darkred") + ggtitle("NYT5 Impressions distribution") + xlab("Impressions") + ylab("Frequency")
+
+ggplot(data=nyt6, aes(x=nyt6$Impressions)) + geom_histogram(binwidth=1, col = "black", fill = "darkred") + ggtitle("NYT6 Impressions distribution") + xlab("Impressions") + ylab("Frequency")
+
+#Cumulative Density Function
+plot(ecdf(nyt2$Age), do.points=TRUE, verticals=TRUE) 
+#Quantile-Quantile?
+par(pty="s") 
+qqnorm(nyt2$Age); qqline(nyt2$Age)
+#Cumulative Density Function
+plot(ecdf(nyt3$Age), do.points=TRUE, verticals=TRUE) 
+#Quantile-Quantile?
+par(pty="s") 
+qqnorm(nyt3$Age); qqline(nyt3$Age)
+#Cumulative Density Function
+plot(ecdf(nyt4$Age), do.points=TRUE, verticals=TRUE) 
+#Quantile-Quantile?
+par(pty="s") 
+qqnorm(nyt4$Age); qqline(nyt4$Age)
+plot(ecdf(nyt5$Age), do.points=TRUE, verticals=TRUE) 
+#Quantile-Quantile?
+par(pty="s") 
+qqnorm(nyt5$Age); qqline(nyt5$Age)
+lm_model = lm(nyt2$Impressions~nyt2$Age)
+summary(lm_model)
+
+#In this part, we take a section of the data that only includes females and do the above analysis again to see if there is
+#any big differences. 
+nyt2 = nyt2[which(nyt2$Gender != "0"), ]
+nyt3 = nyt3[which(nyt3$Gender != "0"), ]
+nyt4 = nyt4[which(nyt4$Gender != "0"), ]
+nyt5 = nyt5[which(nyt5$Gender != "0"), ]
+nyt6 = nyt6[which(nyt6$Gender != "0"), ]
